@@ -1,0 +1,29 @@
+{
+  "name": "node-player",
+  "version": "1.0.0",
+  "description": "node-player",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luyi10year/node-player.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/luyi10year/node-player/issues"
+  },
+  "homepage": "https://github.com/luyi10year/node-player#readme",
+  "devDependencies": {
+    "body-parser": "^1.18.2",
+    "chalk": "^2.3.0",
+    "events": "^1.1.1",
+    "express": "^4.16.2",
+    "lodash": "^4.17.4",
+    "node-sass": "^4.6.0",
+    "p-timeout": "^1.2.0",
+    "puppeteer": "^0.12.0"
+  }
+}

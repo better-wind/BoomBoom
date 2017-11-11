@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <script>
+        (function(win, lib) {
+            var doc = win.document
+            var docEl = doc.documentElement
+            var metaEl = doc.querySelector('meta[name="viewport"]')
+            var flexibleEl = doc.querySelector('meta[name="flexible"]')
+            var dpr = 0
+            var scale = 0
+            var tid
+            var flexible = lib.flexible || (lib.flexible = {})
+
+            if (metaEl) {
+                console.warn('将根据已有的meta标签来设置缩放比例')
+                var match = metaEl.getAttribute('content').match(/initial\-scale=([\d\.]+)/)
+                if (match) {
+                    scale = parseFloat(match[1])
+                    dpr = parseInt(1 / scale)
+                }
+            } else if (flexibleEl) {
+                var content = flexibleEl.getAttribute('content')
+                if (content) {
+                    var initialDpr = content.match(/initial\-dpr=([\d\.]+)/)
+                    var maximumDpr = content.match(/maximum\-dpr=([\d\.]+)/)
+                    if (initialDpr) {
+                        dpr = parseFloat(initialDpr[1])
+                        scale = parseFloat((1 / dpr).toFixed(2))
+                    }
+                    if (maximumDpr) {
+                        dpr = parseFloat(maximumDpr[1])
+                        scale = parseFloat((1 / dpr).toFixed(2))
+                    }
+                }
+            }
+
+            if (!dpr && !scale) {
+                var isAndroid = win.navigator.appVersion.match(/android/gi)
+                var isIPhone = win.navigator.appVersion.match(/iphone/gi)
+                var devicePixelRatio = win.devicePixelRatio
+                if (isIPhone) {
+                    // iOS下，对于2和3的屏，用2倍的方案，其余的用1倍方案
+                    if (devicePixelRatio >= 3 && (!dpr || dpr >= 3)) {
+                        dpr = 3
+                    } else if (devicePixelRatio >= 2 && (!dpr || dpr >= 2)){
+                        dpr = 2
+                    } else {
+                        dpr = 1
+                    }
+                } else {
+                    // 其他设备下，仍旧使用1倍的方案
+                    dpr = 1
+                }
+                scale = 1 / dpr
+            }
+
+            docEl.setAttribute('data-dpr', dpr)
+            if (!metaEl) {
+                metaEl = doc.createElement('meta');
+                metaEl.setAttribute('name', 'viewport')
+                metaEl.setAttribute('content', 'initial-scale=' + scale + ', maximum-scale=' + scale + ', minimum-scale=' + scale + ', user-scalable=no')
+                if (docEl.firstElementChild) {
+                    docEl.firstElementChild.appendChild(metaEl)
+                } else {
+                    var wrap = doc.createElement('div')
+                    wrap.appendChild(metaEl)
+                    doc.write(wrap.innerHTML)
+                }
+            }
+
+            function refreshRem(){
+                var width = docEl.getBoundingClientRect().width
+                if (width / dpr > 540) {
+                    width = 540 * dpr
+                }
+                var rem = width / 10
+                docEl.style.fontSize = rem + 'px'
+                flexible.rem = win.rem = rem
+            }
+
+            win.addEventListener('resize', function() {
+                clearTimeout(tid)
+                tid = setTimeout(refreshRem, 300)
+            }, false)
+            win.addEventListener('pageshow', function(e) {
+                if (e.persisted) {
+                    clearTimeout(tid)
+                    tid = setTimeout(refreshRem, 300)
+                }
+            }, false)
+
+            if (doc.readyState === 'complete') {
+                doc.body.style.fontSize = 12 * dpr + 'px'
+            } else {
+                doc.addEventListener('DOMContentLoaded', function() {
+                    doc.body.style.fontSize = 12 * dpr + 'px'
+                }, false)
+            }
+
+
+            refreshRem()
+
+            flexible.dpr = win.dpr = dpr
+            flexible.refreshRem = refreshRem
+            flexible.rem2px = function(d) {
+                var val = parseFloat(d) * this.rem
+                if (typeof d === 'string' && d.match(/rem$/)) {
+                    val += 'px'
+                }
+                return val
+            }
+            flexible.px2rem = function(d) {
+                var val = parseFloat(d) / this.rem
+                if (typeof d === 'string' && d.match(/px$/)) {
+                    val += 'rem'
+                }
+                return val
+            }
+
+        })(window, window['lib'] || (window['lib'] = {}))
+    </script>
+    <title>Boom!</title>
+    <style>
+        body{
+            background-color: #000;
+
+        }
+        * {
+            padding: 0;
+            margin: 0;
+        }
+        .wrap{
+            width: 7.5rem;
+            height: 3rem;
+            /*background-color: #FFF;*/
+            margin: 2rem auto;
+            text-align: center;
+
+        }
+        .wrap input{
+            line-height: 1rem;
+            height: 1rem;
+            width: 6rem;
+            font-size: 24px;
+            border-radius: .04rem;
+            border: none;
+            text-indent: 5px;
+        }
+        .wrap button{
+            width: 6rem;
+            line-height: 1rem;
+            margin-top: .5rem;
+            border-radius: .04rem;
+            border:none;
+            color:#fff;
+            font-size: 18px;
+            background-color: aquamarine;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <input type="text" id="phone">
+
+    <button id="start"> 开始轰炸 </button>
+
+</div>
+<script>
+    (function(){
+        var domPhone = document.querySelector('#phone'),
+            domButton = document.querySelector('#start')
+        var Ajax = {
+            createXHR: function(){
+                if (window.XMLHttpRequest) {
+                    return new XMLHttpRequest();
+                }
+                else if (window.ActiveXObject) {
+                    var versions = ['MSXML2.XMLHttp','Microsoft.XMLHTTP'];
+                    for (var i = 0,len = versions.length; i<len; i++) {
+                        try {
+                            return new ActiveXObject(version[i]);
+                            break;
+                        }
+                        catch (e) {
+                        }
+                    }
+                }
+                else {
+
+                }
+            },
+            ajax: function(obj){
+                var self = this;
+                var xhr = self.createXHR();
+                var xhr = new window.XMLHttpRequest();
+                obj.url = obj.url + '?rand=' + Math.random();
+                obj.data = self.params(obj.data);
+                if (obj.type === 'get') {
+                    obj.url += obj.url.indexOf('?') == -1 ? '?' + obj.data : '&' + obj.data;
+                }
+                if (obj.async === true) {
+                    xhr.onreadystatechange = function () {
+                        if (xhr.readyState == 4) {
+                            callback();
+                        }
+                    };
+                }
+                xhr.open(obj.type, obj.url, obj.async);
+                if (obj.type === 'post') {
+                    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                    xhr.send(obj.data);
+                } else {
+                    xhr.send(null);
+                }
+                if (obj.async === false) {
+                    callback();
+                }
+                function callback() {
+                    if (xhr.status == 200) {
+                        obj.success(xhr.responseText,xhr.statusText);
+                    } else {
+                        alert(xhr.status + ':' + xhr.statusText);
+                    }
+                }
+            },
+            params: function(data){
+                var arr = [];
+                for (var i in data) {
+                    arr.push(encodeURIComponent(i) + '=' + encodeURIComponent(data[i]));
+                }
+                return arr.join('&');
+            },
+
+        }
+        domButton.addEventListener('click',function(){
+            if(!domPhone.value) {
+                alert('填号码')
+                return false
+            }
+            var _phone = (domPhone.value+'').replace(/(^\s*)|(\s*$)/g, '');
+            if(!_phone.match(/^1(3|4|5|7|8)\d{9}$/g)){
+                alert('格式不正确')
+                return false
+            }
+            clickSend(_phone)
+        })
+        function clickSend(phone){
+            Ajax.ajax({
+                url:'/sendPhone',
+                type:'post',
+                data:{
+                    phone:phone
+                },
+                success : function (rs,status) {
+                    // rs 为字符串 格式需要转成json
+                    rs = JSON.parse(rs);
+                    console.log(rs);
+
+                },
+                async : true
+            })
+        }
+
+    })()
+</script>
+</body>
+
+</html>
