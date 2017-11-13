@@ -7,23 +7,44 @@ const chalk = require('chalk');
 const { shuffle } = require('lodash');
 const utils = require('./utils');
 
+
 class App extends EventEmitter {
     constructor(options = {}){
         super()
         this.options = options
         this.entities = []
         this.providers = []
+        this.initer = [];
         this.on('bootstrap', async () => {
+            try {
+                const initer = this.initer;
+                // init before bootstrap all
+                while (initer.length) {
+                    const initFunc = initer.shift();
+                    await initFunc();
+                }
+            } catch (err) {
+                console.error(`Boomer init fail...`);
+                this.emit('error', err);
+                process.exit(1);
+            }
             this.bootstrap()
         });
 
     }
-    init(){}
+    init(func){
+        this.initer.push(func);
+        return this;
+    }
 
     async run(){
         try {
             this.emit('open', this);
-            this.browser = await puppeteer.launch()
+            this.browser = await puppeteer.launch({
+                headless: false,
+                // executablePath: 'C:\\Users\\weili\\AppData\\Local\\Google\\Chrome SxS\\Application\\chrome.exe',
+                executablePath: 'F:\\google\\chrome-win32\\chrome.exe'
+            })
             this.page = await this.browser.newPage()
             await this.page.setViewport({
                 width: 1366,
@@ -39,8 +60,10 @@ class App extends EventEmitter {
                 try {
                     this.emit('next', entity)
                     await this.page.goto(entity.url, {
-                        networkIdleTimeout: 5000,
-                        waitUntil: 'networkidle',
+                        // networkIdleTimeout: 5000,
+                        // networkIdleTimeout:3000,
+                        // networkIdleTimeout:3000,
+                        networkidle2: 'networkidle',
                         timeout: 3000000
                     })
                     await this.page.deleteCookie();
